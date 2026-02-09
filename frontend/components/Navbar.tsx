@@ -5,8 +5,11 @@ import Image from "next/image";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { NetworkBadge } from "./NetworkBadge";
 import { TwitterConnect } from "./TwitterConnect";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 export function Navbar() {
+  const isAdmin = useIsAdmin();
+
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-surface/80 backdrop-blur-md">
       <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -28,6 +31,14 @@ export function Navbar() {
             >
               Create
             </Link>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                className="text-warning hover:text-warning/80 transition-colors text-sm font-medium"
+              >
+                Admin
+              </Link>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">

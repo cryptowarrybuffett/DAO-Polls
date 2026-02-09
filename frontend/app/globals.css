@@ -10,6 +10,7 @@
   --primary-hover: #0ea5e9;
   --success: #22c55e;
   --danger: #ef4444;
+  --warning: #f59e0b;
   --text-secondary: #94a3b8;
 }
 
@@ -23,6 +24,7 @@
   --color-primary-hover: var(--primary-hover);
   --color-success: var(--success);
   --color-danger: var(--danger);
+  --color-warning: var(--warning);
   --color-text-secondary: var(--text-secondary);
 }
 

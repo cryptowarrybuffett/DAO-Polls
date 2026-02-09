@@ -2,8 +2,10 @@ export const VOTING_CONTRACT_ABI = [
   { inputs: [], name: "AlreadyVoted", type: "error" },
   { inputs: [], name: "EmptyTitle", type: "error" },
   { inputs: [], name: "InvalidDuration", type: "error" },
+  { inputs: [], name: "NotOwner", type: "error" },
   { inputs: [], name: "PollDoesNotExist", type: "error" },
   { inputs: [], name: "PollExpired", type: "error" },
+  { inputs: [], name: "PollIsPaused", type: "error" },
   { inputs: [], name: "PollStillActive", type: "error" },
   {
     anonymous: false,
@@ -14,6 +16,15 @@ export const VOTING_CONTRACT_ABI = [
       { indexed: false, internalType: "uint40", name: "endTime", type: "uint40" },
     ],
     name: "PollCreated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      { indexed: true, internalType: "uint256", name: "pollId", type: "uint256" },
+      { indexed: false, internalType: "bool", name: "paused", type: "bool" },
+    ],
+    name: "PollPaused",
     type: "event",
   },
   {
@@ -46,6 +57,7 @@ export const VOTING_CONTRACT_ABI = [
           { internalType: "address", name: "creator", type: "address" },
           { internalType: "uint40", name: "endTime", type: "uint40" },
           { internalType: "bool", name: "exists", type: "bool" },
+          { internalType: "bool", name: "isPaused", type: "bool" },
           { internalType: "uint128", name: "yesVotes", type: "uint128" },
           { internalType: "uint128", name: "noVotes", type: "uint128" },
           { internalType: "string", name: "title", type: "string" },
@@ -84,6 +96,27 @@ export const VOTING_CONTRACT_ABI = [
     name: "getVoters",
     outputs: [{ internalType: "address[]", name: "", type: "address[]" }],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "owner",
+    outputs: [{ internalType: "address", name: "", type: "address" }],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "_pollId", type: "uint256" }],
+    name: "pausePoll",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [{ internalType: "uint256", name: "_pollId", type: "uint256" }],
+    name: "unpausePoll",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {

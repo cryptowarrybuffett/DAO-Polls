@@ -74,6 +74,11 @@ export default function PollDetailPage() {
                   X Required
                 </span>
               )}
+              {poll.isPaused && (
+                <span className="px-2.5 py-1 text-xs rounded-full bg-warning/20 text-warning">
+                  Paused
+                </span>
+              )}
               <span
                 className={`px-2.5 py-1 text-xs rounded-full ${
                   active
@@ -115,6 +120,7 @@ export default function PollDetailPage() {
       <VotePanel
         pollId={pollId}
         endTime={poll.endTime}
+        isPaused={poll.isPaused}
         userVoted={userVoted}
         userChoice={userChoice}
         onVoteSuccess={handleVoteSuccess}

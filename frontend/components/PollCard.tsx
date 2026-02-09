@@ -32,6 +32,11 @@ export function PollCard({ poll }: { poll: PollData }) {
                   X
                 </span>
               )}
+              {poll.isPaused && (
+                <span className="px-2 py-0.5 text-xs rounded-full bg-warning/20 text-warning">
+                  Paused
+                </span>
+              )}
               <span
                 className={`px-2 py-0.5 text-xs rounded-full ${
                   active

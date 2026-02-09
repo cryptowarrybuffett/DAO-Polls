@@ -24,6 +24,17 @@ describe("VotingContract", function () {
   }
 
   // -------------------------------------------------------------------
+  // Ownership
+  // -------------------------------------------------------------------
+
+  describe("Ownership", function () {
+    it("should set deployer as owner", async function () {
+      const { voting, owner } = await loadFixture(deployFixture);
+      expect(await voting.owner()).to.equal(owner.address);
+    });
+  });
+
+  // -------------------------------------------------------------------
   // Poll Creation
   // -------------------------------------------------------------------
 
@@ -38,6 +49,7 @@ describe("VotingContract", function () {
       expect(poll.description).to.equal("My Description");
       expect(poll.creator).to.equal(owner.address);
       expect(poll.exists).to.be.true;
+      expect(poll.isPaused).to.be.false;
       expect(poll.yesVotes).to.equal(0);
       expect(poll.noVotes).to.equal(0);
     });
@@ -238,6 +250,94 @@ describe("VotingContract", function () {
   });
 
   // -------------------------------------------------------------------
+  // Pause / Unpause (Admin)
+  // -------------------------------------------------------------------
+
+  describe("Pause / Unpause", function () {
+    it("should allow owner to pause a poll", async function () {
+      const { voting } = await loadFixture(deployWithPollFixture);
+
+      await expect(voting.pausePoll(0))
+        .to.emit(voting, "PollPaused")
+        .withArgs(0, true);
+
+      const poll = await voting.getPoll(0);
+      expect(poll.isPaused).to.be.true;
+    });
+
+    it("should allow owner to unpause a poll", async function () {
+      const { voting } = await loadFixture(deployWithPollFixture);
+
+      await voting.pausePoll(0);
+      await expect(voting.unpausePoll(0))
+        .to.emit(voting, "PollPaused")
+        .withArgs(0, false);
+
+      const poll = await voting.getPoll(0);
+      expect(poll.isPaused).to.be.false;
+    });
+
+    it("should revert pausePoll for non-owner", async function () {
+      const { voting, voter1 } = await loadFixture(deployWithPollFixture);
+
+      await expect(
+        voting.connect(voter1).pausePoll(0)
+      ).to.be.revertedWithCustomError(voting, "NotOwner");
+    });
+
+    it("should revert unpausePoll for non-owner", async function () {
+      const { voting, voter1 } = await loadFixture(deployWithPollFixture);
+
+      await voting.pausePoll(0);
+
+      await expect(
+        voting.connect(voter1).unpausePoll(0)
+      ).to.be.revertedWithCustomError(voting, "NotOwner");
+    });
+
+    it("should revert vote on paused poll", async function () {
+      const { voting, voter1 } = await loadFixture(deployWithPollFixture);
+
+      await voting.pausePoll(0);
+
+      await expect(
+        voting.connect(voter1).vote(0, true)
+      ).to.be.revertedWithCustomError(voting, "PollIsPaused");
+    });
+
+    it("should allow voting after unpause", async function () {
+      const { voting, voter1 } = await loadFixture(deployWithPollFixture);
+
+      await voting.pausePoll(0);
+      await voting.unpausePoll(0);
+
+      await expect(voting.connect(voter1).vote(0, true)).to.not.be.reverted;
+
+      const poll = await voting.getPoll(0);
+      expect(poll.yesVotes).to.equal(1);
+    });
+
+    it("should revert pausePoll for non-existent poll", async function () {
+      const { voting } = await loadFixture(deployFixture);
+
+      await expect(
+        voting.pausePoll(999)
+      ).to.be.revertedWithCustomError(voting, "PollDoesNotExist");
+    });
+
+    it("should return isPaused in getPoll", async function () {
+      const { voting } = await loadFixture(deployWithPollFixture);
+
+      let poll = await voting.getPoll(0);
+      expect(poll.isPaused).to.be.false;
+
+      await voting.pausePoll(0);
+      poll = await voting.getPoll(0);
+      expect(poll.isPaused).to.be.true;
+    });
+  });
+
+  // -------------------------------------------------------------------
   // View Functions
   // -------------------------------------------------------------------
 
@@ -250,6 +350,7 @@ describe("VotingContract", function () {
       expect(poll.description).to.equal("A test description");
       expect(poll.creator).to.equal(owner.address);
       expect(poll.exists).to.be.true;
+      expect(poll.isPaused).to.be.false;
       expect(poll.yesVotes).to.equal(0);
       expect(poll.noVotes).to.equal(0);
       expect(poll.endTime).to.be.greaterThan(0);

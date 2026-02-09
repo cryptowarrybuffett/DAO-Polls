@@ -13,6 +13,7 @@ import { useEffect } from "react";
 interface VotePanelProps {
   pollId: number;
   endTime: number;
+  isPaused: boolean;
   userVoted: boolean;
   userChoice: boolean;
   onVoteSuccess: () => void;
@@ -21,6 +22,7 @@ interface VotePanelProps {
 export function VotePanel({
   pollId,
   endTime,
+  isPaused,
   userVoted,
   userChoice,
   onVoteSuccess,
@@ -62,6 +64,14 @@ export function VotePanel({
     return (
       <div className="bg-surface border border-border rounded-2xl p-5 text-center shadow-lg shadow-black/20">
         <p className="text-text-secondary">This poll has ended</p>
+      </div>
+    );
+  }
+
+  if (isPaused) {
+    return (
+      <div className="bg-surface border border-border rounded-2xl p-5 text-center shadow-lg shadow-black/20">
+        <p className="text-warning">This poll has been paused by an admin</p>
       </div>
     );
   }

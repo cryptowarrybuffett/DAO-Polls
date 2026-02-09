@@ -37,6 +37,7 @@ export function usePoll(pollId: number) {
       creator: string;
       endTime: bigint;
       exists: boolean;
+      isPaused: boolean;
       yesVotes: bigint;
       noVotes: bigint;
       title: string;
@@ -47,6 +48,7 @@ export function usePoll(pollId: number) {
       creator: r.creator,
       endTime: Number(r.endTime),
       exists: r.exists,
+      isPaused: r.isPaused,
       yesVotes: r.yesVotes,
       noVotes: r.noVotes,
       title: r.title,

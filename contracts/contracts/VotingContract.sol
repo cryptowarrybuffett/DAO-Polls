@@ -15,19 +15,22 @@ contract VotingContract {
     error AlreadyVoted();
     error InvalidDuration();
     error EmptyTitle();
+    error NotOwner();
+    error PollIsPaused();
 
     // -----------------------------------------------------------------------
     // Data structures
     // -----------------------------------------------------------------------
 
     /// @dev Struct is packed to minimize storage slots.
-    ///  Slot 1: creator (20) + endTime (5) + exists (1) = 26 bytes
+    ///  Slot 1: creator (20) + endTime (5) + exists (1) + isPaused (1) = 27 bytes
     ///  Slot 2: yesVotes (16) + noVotes (16) = 32 bytes
     ///  Slots 3+: title and description (dynamic)
     struct Poll {
         address creator;
         uint40 endTime;
         bool exists;
+        bool isPaused;
         uint128 yesVotes;
         uint128 noVotes;
         string title;
@@ -37,6 +40,9 @@ contract VotingContract {
     // -----------------------------------------------------------------------
     // State variables
     // -----------------------------------------------------------------------
+
+    /// @notice Contract owner (deployer)
+    address public owner;
 
     /// @notice Total number of polls created
     uint256 public pollCount;
@@ -70,6 +76,25 @@ contract VotingContract {
         bool voteYes
     );
 
+    event PollPaused(uint256 indexed pollId, bool paused);
+
+    // -----------------------------------------------------------------------
+    // Modifiers
+    // -----------------------------------------------------------------------
+
+    modifier onlyOwner() {
+        if (msg.sender != owner) revert NotOwner();
+        _;
+    }
+
+    // -----------------------------------------------------------------------
+    // Constructor
+    // -----------------------------------------------------------------------
+
+    constructor() {
+        owner = msg.sender;
+    }
+
     // -----------------------------------------------------------------------
     // External / public functions
     // -----------------------------------------------------------------------
@@ -101,7 +126,7 @@ contract VotingContract {
         p.exists = true;
         p.title = _title;
         p.description = _description;
-        // yesVotes and noVotes default to 0
+        // yesVotes, noVotes default to 0; isPaused defaults to false
 
         emit PollCreated(pollId, msg.sender, _title, endTime);
     }
@@ -113,6 +138,7 @@ contract VotingContract {
         Poll storage p = polls[_pollId];
 
         if (!p.exists) revert PollDoesNotExist();
+        if (p.isPaused) revert PollIsPaused();
         if (block.timestamp >= p.endTime) revert PollExpired();
         if (hasVoted[_pollId][msg.sender]) revert AlreadyVoted();
 
@@ -131,6 +157,24 @@ contract VotingContract {
         }
 
         emit VoteCast(_pollId, msg.sender, _voteYes);
+    }
+
+    /// @notice Pause a poll (only owner). Paused polls cannot receive votes.
+    /// @param _pollId The poll ID to pause.
+    function pausePoll(uint256 _pollId) external onlyOwner {
+        Poll storage p = polls[_pollId];
+        if (!p.exists) revert PollDoesNotExist();
+        p.isPaused = true;
+        emit PollPaused(_pollId, true);
+    }
+
+    /// @notice Unpause a poll (only owner).
+    /// @param _pollId The poll ID to unpause.
+    function unpausePoll(uint256 _pollId) external onlyOwner {
+        Poll storage p = polls[_pollId];
+        if (!p.exists) revert PollDoesNotExist();
+        p.isPaused = false;
+        emit PollPaused(_pollId, false);
     }
 
     // -----------------------------------------------------------------------

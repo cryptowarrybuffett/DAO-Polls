@@ -55,10 +55,10 @@ export default function PollDetailPage() {
 
       {/* Poll header */}
       <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-lg shadow-black/20">
-        {meta?.imageBase64 && (
+        {meta?.imageUrl && (
           <div className="relative w-full h-56">
             <img
-              src={meta.imageBase64}
+              src={meta.imageUrl}
               alt={poll.title}
               className="w-full h-full object-cover"
             />

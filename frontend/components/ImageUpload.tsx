@@ -1,35 +1,65 @@
 "use client";
 
-import { useRef, useCallback } from "react";
+import { useRef, useCallback, useState } from "react";
 
 interface ImageUploadProps {
-  onImageSelect: (base64: string | null) => void;
+  onImageSelect: (url: string | null) => void;
   currentImage: string | null;
 }
 
-const MAX_FILE_SIZE = 500 * 1024; // 500KB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB for IPFS
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
 
 export function ImageUpload({ onImageSelect, currentImage }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const uploadToIPFS = useCallback(
+    async (file: File) => {
+      setError(null);
+      setUploading(true);
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          const data = (await response.json()) as { error: string };
+          throw new Error(data.error || "Upload failed");
+        }
+
+        const data = (await response.json()) as { imageUrl: string };
+        onImageSelect(data.imageUrl);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Upload failed";
+        setError(message);
+        console.error("IPFS upload error:", err);
+      } finally {
+        setUploading(false);
+      }
+    },
+    [onImageSelect]
+  );
 
   const handleFile = useCallback(
     (file: File) => {
       if (!ACCEPTED_TYPES.includes(file.type)) {
-        alert("Please select a PNG, JPEG, GIF, or WebP image.");
+        setError("Please select a PNG, JPEG, GIF, or WebP image.");
         return;
       }
       if (file.size > MAX_FILE_SIZE) {
-        alert("Image must be under 500KB.");
+        setError("Image must be under 5MB.");
         return;
       }
-      const reader = new FileReader();
-      reader.onload = () => {
-        onImageSelect(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+      uploadToIPFS(file);
     },
-    [onImageSelect]
+    [uploadToIPFS]
   );
 
   const handleChange = useCallback(
@@ -75,18 +105,30 @@ export function ImageUpload({ onImageSelect, currentImage }: ImageUploadProps) {
         </div>
       ) : (
         <div
-          onClick={() => inputRef.current?.click()}
+          onClick={() => !uploading && inputRef.current?.click()}
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
-          className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+          className={`border-2 border-dashed border-border rounded-lg p-6 text-center transition-colors ${
+            uploading ? "opacity-60 cursor-wait" : "cursor-pointer hover:border-primary/50"
+          }`}
         >
-          <p className="text-text-secondary text-sm">
-            Click or drag to upload an image
-          </p>
-          <p className="text-text-secondary text-xs mt-1">
-            PNG, JPEG, GIF, WebP — max 500KB
-          </p>
+          {uploading ? (
+            <p className="text-primary text-sm">Uploading to IPFS...</p>
+          ) : (
+            <>
+              <p className="text-text-secondary text-sm">
+                Click or drag to upload an image
+              </p>
+              <p className="text-text-secondary text-xs mt-1">
+                PNG, JPEG, GIF, WebP — max 5MB
+              </p>
+            </>
+          )}
         </div>
+      )}
+
+      {error && (
+        <p className="text-danger text-xs mt-1.5">{error}</p>
       )}
 
       <input
@@ -95,6 +137,7 @@ export function ImageUpload({ onImageSelect, currentImage }: ImageUploadProps) {
         accept="image/png,image/jpeg,image/gif,image/webp"
         onChange={handleChange}
         className="hidden"
+        disabled={uploading}
       />
     </div>
   );

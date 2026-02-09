@@ -21,13 +21,13 @@ export function CreatePollForm() {
   const [description, setDescription] = useState("");
   const [durationValue, setDurationValue] = useState("1");
   const [durationUnit, setDurationUnit] = useState<"hours" | "days" | "weeks">("days");
-  const [imageBase64, setImageBase64] = useState<string | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [requiresTwitter, setRequiresTwitter] = useState(false);
 
   useEffect(() => {
     if (isSuccess && createdPollId !== null) {
       const meta: PollOffchainMeta = {};
-      if (imageBase64) meta.imageBase64 = imageBase64;
+      if (imageUrl) meta.imageUrl = imageUrl;
       if (requiresTwitter) meta.requiresTwitter = true;
       if (Object.keys(meta).length > 0) {
         setPollMeta(createdPollId, meta);
@@ -35,7 +35,7 @@ export function CreatePollForm() {
       const timer = setTimeout(() => router.push("/"), 2000);
       return () => clearTimeout(timer);
     }
-  }, [isSuccess, createdPollId, imageBase64, requiresTwitter, router]);
+  }, [isSuccess, createdPollId, imageUrl, requiresTwitter, router]);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -100,7 +100,7 @@ export function CreatePollForm() {
         />
       </div>
 
-      <ImageUpload onImageSelect={setImageBase64} currentImage={imageBase64} />
+      <ImageUpload onImageSelect={setImageUrl} currentImage={imageUrl} />
 
       <div>
         <label className="block text-sm font-medium text-foreground mb-1.5">

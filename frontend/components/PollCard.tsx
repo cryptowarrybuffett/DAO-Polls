@@ -13,10 +13,10 @@ export function PollCard({ poll }: { poll: PollData }) {
   return (
     <Link href={`/poll/${poll.id}`}>
       <div className="bg-surface border border-border rounded-2xl overflow-hidden hover:border-primary/50 hover:bg-surface-hover transition-all cursor-pointer shadow-lg shadow-black/20 card-glow">
-        {meta?.imageBase64 && (
+        {meta?.imageUrl && (
           <div className="relative w-full h-40">
             <img
-              src={meta.imageBase64}
+              src={meta.imageUrl}
               alt={poll.title}
               className="w-full h-full object-cover"
             />

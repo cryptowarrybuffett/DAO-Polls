@@ -1,4 +1,4 @@
 export interface PollOffchainMeta {
-  imageBase64?: string;
+  imageUrl?: string;
   requiresTwitter?: boolean;
 }
